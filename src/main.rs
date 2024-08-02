@@ -11,7 +11,7 @@ fn main() {
     
     for stream in listener.incoming() {
         match stream {
-            Ok(_stream) => {
+            Ok(mut _stream) => {
                 let response: &str = "HTTP/1.1 200 OK\r\n\r\n";
                 let repsonse_bytes =  response.as_bytes();
                 _stream.write(repsonse_bytes);
