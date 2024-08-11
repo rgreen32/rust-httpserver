@@ -15,7 +15,7 @@ fn main() {
                 let response: &str = "HTTP/1.1 200 OK\r\n\r\n";
                 let repsonse_bytes =  response.as_bytes();
                 _stream.write(repsonse_bytes);
-                println!("accepted new connection");
+                println!("accepted new connection ");
             }
             Err(e) => {
                 println!("error: {}", e);
