@@ -12,7 +12,7 @@ fn test_get_request_line() {
     let mut mock_stream = Cursor::new(request.to_vec());
 
     // Call the function
-    let (method, request_target, version) = request_handler::get_request_line(&mut mock_stream);
+    let (method, request_target, version) = request_handler::get_request_line(&mut mock_stream).unwrap();
 
     // Assertions
     assert_eq!(method, "GET");
