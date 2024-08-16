@@ -19,7 +19,7 @@ impl Display for HttpResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} ", self.version);
         write!(f, "{} ", self.status_code);
-        write!(f, "{} ", self.reason_phrase);
+        write!(f, "{}", self.reason_phrase);
         write!(f, "\r\n");
 
         for (header, value) in self.headers.iter(){
