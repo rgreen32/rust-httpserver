@@ -1,6 +1,6 @@
 
 
-use std::{io::{Write}, net::{TcpListener}, time::Duration};
+use std::{collections::HashMap, io::Write, net::TcpListener, time::Duration};
 use http_server_starter_rust::{request_handler, HttpRequest, HttpResponse};
 use std::io::BufReader;
 
@@ -21,7 +21,8 @@ fn main() {
                                                             method: method,  
                                                             request_target: request_target, 
                                                             version: version,
-                                                            headers: Vec::new()
+                                                            headers: HashMap::new(),
+                                                            body: String::new()
                                                         };
                         let response = request_handler::handle_request(request);
                         let response_string = response.to_string();
@@ -33,7 +34,8 @@ fn main() {
                                                                 version: String::from("HTTP/1.1"),
                                                                 status_code: 500,
                                                                 reason_phrase: e.to_string(),
-                                                                headers: vec![]  
+                                                                headers: HashMap::new(),
+                                                                body: String::new()  
                                                             };
                         let response_string = error_response.to_string();
                         let response_bytes = response_string.as_bytes();

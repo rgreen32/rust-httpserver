@@ -1,18 +1,44 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 pub mod request_handler;
+
 pub struct HttpRequest {
     pub method: String,
     pub request_target: String,
     pub version: String,
-    pub headers: Vec<String>
+    pub headers: HashMap<String, String>,
+    pub body: String
 }
+
+
+pub struct HttpRequest2 {
+    pub request_line: RequestLine,
+    pub headers: HashMap<String, String>,
+    pub body: String
+}
+
+pub struct RequestLine {
+    pub method: String,
+    pub request_target: String,
+    pub version: String
+}
+impl From<String> for RequestLine {
+    fn from(request_line: String) -> Self {
+        return RequestLine {
+            method: String::new(),
+            request_target: String::new(),
+            version: String::new()
+        }
+    }
+}
+
 
 pub struct HttpResponse {
     pub version: String,
     pub status_code: u32,
     pub reason_phrase: String,
-    pub headers: Vec<(String, String)>
+    pub headers: HashMap<String, String>,
+    pub body: String
 }
 
 impl Display for HttpResponse {
