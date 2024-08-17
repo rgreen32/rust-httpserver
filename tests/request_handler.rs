@@ -1,7 +1,7 @@
 use std::{collections::HashMap, net::TcpStream};
 use std::io::Write;
 use std::str::from_utf8;
-use http_server_starter_rust::{request_handler, HttpRequest, HttpResponse};
+use http_server_starter_rust::{request_handler, HttpRequest, HttpResponse, RequestLine};
 use std::io::{Cursor, Read};
 
 
@@ -21,25 +21,50 @@ fn test_get_request_line() {
 }
 
 #[test]
+fn test_deserialize_requestline_returns_requestline() {
+    let requestline_string = "GET /abc HTTP/1.1".to_string();
+
+    let result = request_handler::deserialize_requestline(requestline_string);
+
+    assert_eq!(result.method, "GET");
+    assert_eq!(result.target, "/abc");
+    assert_eq!(result.version, "HTTP/1.1");
+}
+
+#[test]
+fn test_deserialize_headers_returns_headers() {
+    let requestheaders_string = "Date: Wed, 15 Aug 2024 12:00:00 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 138\r\nConnection: keep-alive".to_string();
+
+    let result = request_handler::deserialize_headers(requestheaders_string);
+
+    assert_eq!(result.get("Date").unwrap(), "Wed, 15 Aug 2024 12:00:00 GMT");
+    assert_eq!(result.get("Content-Type").unwrap(), "text/html; charset=UTF-8");
+    assert_eq!(result.get("Content-Length").unwrap(), "138");
+    assert_eq!(result.get("Connection").unwrap(), "keep-alive");
+}
+
+#[test]
 fn test_read_stream_into_request() {
     // Mocking a TCP stream with in-memory data using Cursor
-    let request = b"HTTP/1.1 200 OK\r\nDate: Wed, 15 Aug 2024 12:00:00 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 138\r\nConnection: keep-alive\r\n\r\n<html>\r\n<head><title>Sample Page</title></head>\r\n<body><h1>Hello, World!</h1></body>\r\n</html>\r\n";
+    let request = b"GET /echo/abc HTTP/1.1\r\nHost: localhost:4221\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\n\r\n";
 
     let mut mock_stream = Cursor::new(request.to_vec());
 
     let request: HttpRequest = request_handler::read_stream_into_request(&mut mock_stream).unwrap();
 
-    assert_eq!(request.method, "GET");
-    assert_eq!(request.request_target, "/");
-    assert_eq!(request.version, "HTTP/1.1");
+    assert_eq!(request.request_line.method, "GET");
+    assert_eq!(request.request_line.target, "/echo/abc");
+    assert_eq!(request.request_line.version, "HTTP/1.1");
 }
 
 #[test]
 fn test_handle_request_root() {
     let request = HttpRequest {
-                                    method: "GET".to_string(),
-                                    request_target: "/".to_string(),
-                                    version: "HTTP/1.1".to_string(),
+                                    request_line: RequestLine {
+                                                        method: "GET".to_string(),
+                                                        target: "/".to_string(),
+                                                        version: "HTTP/1.1".to_string(),
+                                                    },
                                     headers: HashMap::new(),
                                     body: String::new()
                                 };
@@ -53,9 +78,11 @@ fn test_handle_request_root() {
 #[test]
 fn test_handle_request_404() {
     let request = HttpRequest {
-                    method: "GET".to_string(),
-                    request_target: "/unknown".to_string(),
-                    version: "HTTP/1.1".to_string(),
+                    request_line: RequestLine {
+                                        method: "GET".to_string(),
+                                        target: "/unknown".to_string(),
+                                        version: "HTTP/1.1".to_string(),
+                                    },
                     headers: HashMap::new(),
                     body: String::new()
                 };

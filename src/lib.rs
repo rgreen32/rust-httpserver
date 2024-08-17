@@ -2,35 +2,20 @@ use std::{collections::HashMap, fmt::Display};
 
 pub mod request_handler;
 
-pub struct HttpRequest {
+pub struct RequestLine {
     pub method: String,
-    pub request_target: String,
-    pub version: String,
-    pub headers: HashMap<String, String>,
-    pub body: String
+    pub target: String,
+    pub version: String
 }
 
 
-pub struct HttpRequest2 {
+pub struct HttpRequest {
     pub request_line: RequestLine,
     pub headers: HashMap<String, String>,
     pub body: String
 }
 
-pub struct RequestLine {
-    pub method: String,
-    pub request_target: String,
-    pub version: String
-}
-impl From<String> for RequestLine {
-    fn from(request_line: String) -> Self {
-        return RequestLine {
-            method: String::new(),
-            request_target: String::new(),
-            version: String::new()
-        }
-    }
-}
+
 
 
 pub struct HttpResponse {

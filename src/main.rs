@@ -1,7 +1,7 @@
 
 
 use std::{collections::HashMap, io::Write, net::TcpListener, time::Duration};
-use http_server_starter_rust::{request_handler, HttpRequest, HttpResponse};
+use http_server_starter_rust::{request_handler, HttpRequest, HttpResponse, RequestLine};
 use std::io::BufReader;
 
 fn main() {
@@ -18,9 +18,11 @@ fn main() {
                 match request_handler::get_request_line(&mut reader) {
                     Ok((method, request_target, version)) => {
                         let mut request = HttpRequest { 
-                                                            method: method,  
-                                                            request_target: request_target, 
-                                                            version: version,
+                                                            request_line: RequestLine{
+                                                                                method: method,  
+                                                                                target: request_target, 
+                                                                                version: version,
+                                                                            },
                                                             headers: HashMap::new(),
                                                             body: String::new()
                                                         };
