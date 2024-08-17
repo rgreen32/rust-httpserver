@@ -126,7 +126,7 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
     let mut value_length = 0;
 
     //request line
-    while value_position != 3 {
+    while value_position != 2 {
         let bytes_read = stream.read(&mut buffer);
         match bytes_read {
             Ok(bytes_read) => {
