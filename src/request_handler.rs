@@ -22,7 +22,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                         reason_phrase: String::from("OK"),
                         headers: HashMap::from([
                                         ("Content-Type".to_string(), "text/plain".to_string()),
-                                        ("Content-Length".to_string(), "3".to_string())
+                                        ("Content-Length".to_string(), path_components[1].len().to_string())
                                     ]),
                         body: path_components[1].to_string()
                     }, 
