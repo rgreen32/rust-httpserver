@@ -155,3 +155,24 @@ fn test_echo_path_returns_body_3(){
     assert_eq!(response.headers.get("Content-Length"), Some(&"5".to_string()));
     assert_eq!(response.body, "grape")
 }
+
+#[test]
+fn test_useragent_path_returns_body_1(){
+    let request = HttpRequest {
+                                    request_line: RequestLine {
+                                                        method: "GET".to_string(),
+                                                        target: "/user-agent".to_string(),
+                                                        version: "HTTP/1.1".to_string(),
+                                                    },
+                                    headers: HashMap::from([("User-Agent".to_string(), "foobar".to_string())]),
+                                    body: String::new()
+                                };
+
+    let response = request_handler::handle_request(request);
+    
+    assert_eq!(response.status_code, 200);
+    assert!(response.headers.contains_key("Content-Type"));
+    assert!(response.headers.contains_key("Content-Length"));
+    assert_eq!(response.headers.get("Content-Length"), Some(&"6".to_string()));
+    assert_eq!(response.body, "foobar")
+}
