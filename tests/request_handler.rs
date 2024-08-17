@@ -6,21 +6,6 @@ use std::io::{Cursor, Read};
 
 
 #[test]
-fn test_get_request_line() {
-    // Mocking a TCP stream with in-memory data using Cursor
-    let request = b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
-    let mut mock_stream = Cursor::new(request.to_vec());
-
-    // Call the function
-    let (method, request_target, version) = request_handler::get_request_line(&mut mock_stream).unwrap();
-
-    // Assertions
-    assert_eq!(method, "GET");
-    assert_eq!(request_target, "/");
-    assert_eq!(version, "HTTP/1.1");
-}
-
-#[test]
 fn test_deserialize_requestline_returns_requestline() {
     let requestline_string = "GET /abc HTTP/1.1".to_string();
 

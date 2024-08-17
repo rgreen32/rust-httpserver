@@ -1,8 +1,37 @@
 
-use std::{fmt::Display, io::{self, BufRead, Read, Write}, net::{TcpListener, TcpStream}, time::Duration};
+use std::{fmt::Display, io::{self, BufRead, BufReader, Read, Write}, net::{TcpListener, TcpStream}, time::Duration};
 use itertools::Itertools;
 
 use super::*;
+
+pub fn accept_request_stream(stream: &mut TcpStream) {
+    println!("accepted new connection ");
+    stream.set_read_timeout(Some(Duration::new(1, 0)));
+
+    let mut reader = BufReader::new(&*stream);
+
+    match request_handler::read_stream_into_request(&mut reader) {
+        Ok(request) => {
+            let response = request_handler::handle_request(request);
+            let response_string = response.to_string();
+            let response_bytes = response_string.as_bytes();
+            let _ = stream.write_all(response_bytes);
+
+        },
+        Err(e) => {
+            let error_response = HttpResponse { 
+                                                    version: String::from("HTTP/1.1"),
+                                                    status_code: 500,
+                                                    reason_phrase: e.to_string(),
+                                                    headers: HashMap::new(),
+                                                    body: String::new()  
+                                                };
+            let response_string = error_response.to_string();
+            let response_bytes = response_string.as_bytes();
+            let _ = stream.write_all(response_bytes);
+        }
+    }
+}
 
 
 pub fn handle_request(request: HttpRequest) -> HttpResponse {
@@ -56,63 +85,6 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
     return response
 }
 
-
-pub fn get_request_line<Stream: BufRead>(stream: &mut Stream) -> Result<(String, String, String), io::Error> {
-    let mut request_line = (String::new(), String::new(), String::new());
-
-
-    let mut buffer = [0; 1024];
-    let mut value_position = 0;
-    let mut value_offset = 0;
-    let mut value_length = 0;
-    while value_position != 3 {
-        let bytes_read = stream.read(&mut buffer);
-        match bytes_read {
-            Ok(bytes_read) => {
-                if bytes_read == 0 {
-                    break;
-                }
-
-                for (index, byte) in buffer[..bytes_read].iter().enumerate() {
-                    if *byte == 32 || *byte == 13 { // if value is " " or \r
-                        let mut value = &buffer[value_offset..value_offset+value_length];
-                        match value_position {
-                            0 => {
-                                
-                                let _ = value.read_to_string(&mut request_line.0);
-                            },
-                            1 => {
-                                let _ = value.read_to_string(&mut request_line.1);
-                            },
-                            2 => {
-                                let _ = value.read_to_string(&mut request_line.2);
-                            },
-                            _ => {
-                                panic!("First sequence line too big?");
-                            }
-                        }
-                        value_offset = value_offset+ value_length + 1;
-                        value_position += 1;
-                        value_length = 0;
-                    } else {
-                        value_length += 1;
-                    }
-        
-                    if index != buffer.len() - 1 && [*byte, buffer[index+1]] == [b'\r', b'\n'] {
-                        break;
-                    }
-                }
-            },
-            
-            Err(err) => {
-                return Err(err);
-            }
-        }
-
-    }
-
-    return  Ok(request_line);
-}
 
 pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<HttpRequest, io::Error> {
     let mut request_line_bytes: Vec<u8> = Vec::new();
