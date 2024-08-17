@@ -26,6 +26,19 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                     ]),
                         body: path_components[1].to_string()
                     }, 
+        "user-agent" => HttpResponse { 
+                        version: request.request_line.version,
+                        status_code: 200,
+                        reason_phrase: String::from("OK"),
+                        headers: HashMap::from([
+                                        ("Content-Type".to_string(), "text/plain".to_string()),
+                                        ("Content-Length".to_string(), path_components[1].len().to_string())
+                                    ]),
+                        body: match request.headers.get(path_components[1]) {
+                            Some(value) => value.to_string(),
+                            None => String::new()
+                        }
+                    }, 
         _ => HttpResponse {
                     version: request.request_line.version,
                     status_code: 404,
