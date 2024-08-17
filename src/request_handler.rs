@@ -43,7 +43,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                 body: user_agent_value.clone()
                                 
                             }
-                    }, 
+            }, 
         _ => HttpResponse {
                     version: request.request_line.version,
                     status_code: 404,
