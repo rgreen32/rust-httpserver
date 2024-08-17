@@ -78,14 +78,14 @@ fn test_handle_request_root() {
 #[test]
 fn test_handle_request_404() {
     let request = HttpRequest {
-                    request_line: RequestLine {
-                                        method: "GET".to_string(),
-                                        target: "/unknown".to_string(),
-                                        version: "HTTP/1.1".to_string(),
-                                    },
-                    headers: HashMap::new(),
-                    body: String::new()
-                };
+                                    request_line: RequestLine {
+                                                        method: "GET".to_string(),
+                                                        target: "/unknown".to_string(),
+                                                        version: "HTTP/1.1".to_string(),
+                                                    },
+                                    headers: HashMap::new(),
+                                    body: String::new()
+                                };
 
     let response = request_handler::handle_request(request);
 
@@ -93,37 +93,43 @@ fn test_handle_request_404() {
     assert_eq!(response.reason_phrase, "Not Found");
 }
 
-// #[test]
-// fn test_echo_path_returns_body_1(){
+#[test]
+fn test_echo_path_returns_body_1(){
 
-//     let request = HttpRequest {
-//                     method: "GET".to_string(),
-//                     request_target: "/echo/abc".to_string(),
-//                     version: "HTTP/1.1".to_string(),
-//                     headers: HashMap::new(),
-//                     body: String::new()
-//                 };
-//     let response = request_handler::handle_request(request);
-    
-//     assert_eq!(response.status_code, 200);
-//     assert!(response.headers.contains_key("Content-Type"));
-//     assert!(response.headers.contains_key("Content-Length"));
-//     assert_eq!(response.body, "abc")
-// }
+    let request = HttpRequest {
+                                    request_line: RequestLine {
+                                                        method: "GET".to_string(),
+                                                        target: "/echo/abc".to_string(),
+                                                        version: "HTTP/1.1".to_string(),
+                                                    },
+                                    headers: HashMap::new(),
+                                    body: String::new()
+                                };
 
-// #[test]
-// fn test_echo_path_returns_body_2(){
-//     let request = HttpRequest {
-//                     method: "GET".to_string(),
-//                     request_target: "/echo/zzzzz_ff".to_string(),
-//                     version: "HTTP/1.1".to_string(),
-//                     headers: HashMap::new(),
-//                     body: String::new()
-//                 };
-//     let response = request_handler::handle_request(request);
+    let response = request_handler::handle_request(request);
     
-//     assert_eq!(response.status_code, 200);
-//     assert!(response.headers.contains_key("Content-Type"));
-//     assert!(response.headers.contains_key("Content-Length"));
-//     assert_eq!(response.body, "abc")
-// }
+    assert_eq!(response.status_code, 200);
+    assert!(response.headers.contains_key("Content-Type"));
+    assert!(response.headers.contains_key("Content-Length"));
+    assert_eq!(response.body, "abc")
+}
+
+#[test]
+fn test_echo_path_returns_body_2(){
+    let request = HttpRequest {
+                                    request_line: RequestLine {
+                                                        method: "GET".to_string(),
+                                                        target: "/echo/zzzzz_ff".to_string(),
+                                                        version: "HTTP/1.1".to_string(),
+                                                    },
+                                    headers: HashMap::new(),
+                                    body: String::new()
+                                };
+
+    let response = request_handler::handle_request(request);
+    
+    assert_eq!(response.status_code, 200);
+    assert!(response.headers.contains_key("Content-Type"));
+    assert!(response.headers.contains_key("Content-Length"));
+    assert_eq!(response.body, "zzzzz_ff")
+}

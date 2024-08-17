@@ -6,16 +6,26 @@ use super::*;
 
 
 pub fn handle_request(request: HttpRequest) -> HttpResponse {
+    let path_components: Vec<&str> = request.request_line.target[1..].split("/").collect();
     
-    
-    let response: HttpResponse = match request.request_line.target.as_str() {
-        "/" => HttpResponse { 
+    let response: HttpResponse = match path_components[0] {
+        "" => HttpResponse { 
                     version: request.request_line.version,
                     status_code: 200,
                     reason_phrase: String::from("OK"),
                     headers: HashMap::new(),
                     body: String::new()
                 }, 
+        "echo" => HttpResponse { 
+                        version: request.request_line.version,
+                        status_code: 200,
+                        reason_phrase: String::from("OK"),
+                        headers: HashMap::from([
+                                        ("Content-Type".to_string(), "text/plain".to_string()),
+                                        ("Content-Length".to_string(), "3".to_string())
+                                    ]),
+                        body: path_components[1].to_string()
+                    }, 
         _ => HttpResponse {
                     version: request.request_line.version,
                     status_code: 404,
