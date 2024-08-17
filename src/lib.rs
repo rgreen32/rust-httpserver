@@ -35,8 +35,11 @@ impl Display for HttpResponse {
 
         for (header, value) in self.headers.iter(){
             write!(f, "{}: {}\r\n", header, value);
-        } 
+        }
+        write!(f, "\r\n");
+    
 
-        return write!(f, "\r\n");
+
+        return write!(f, "{}", self.body); 
     }
 }

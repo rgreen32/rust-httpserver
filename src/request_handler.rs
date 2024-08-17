@@ -24,7 +24,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                         ("Content-Type".to_string(), "text/plain".to_string()),
                                         ("Content-Length".to_string(), path_components[1].len().to_string())
                                     ]),
-                        body: path_components[1].to_string()
+                        body: "abc".to_string()
                     }, 
         _ => HttpResponse {
                     version: request.request_line.version,
