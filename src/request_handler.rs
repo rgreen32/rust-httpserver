@@ -20,7 +20,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                     }, 
                                                                                                                                                                     "echo" => {
                                                                                                                                                                         let status_code = 200;
-                                                                                                                                                                        let reason_phrase = String::from("Ok");
+                                                                                                                                                                        let reason_phrase = String::from("OK");
                                                                                                                                                                         
                                                                                                                                                                         let body = match path_components.get(1) {
                                                                                                                                                                             Some(value) => value.to_string(),
@@ -36,7 +36,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                     }, 
                                                                                                                                                                     "user-agent" => {
                                                                                                                                                                         let status_code = 200;
-                                                                                                                                                                        let reason_phrase = String::from("Ok");
+                                                                                                                                                                        let reason_phrase = String::from("OK");
 
                                                                                                                                                                         let body = match request.headers.get("User-Agent") {
                                                                                                                                                                             Some(value) => value.to_string(),
@@ -51,7 +51,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                     },
                                                                                                                                                                     "files" => {
                                                                                                                                                                         let status_code = 200;
-                                                                                                                                                                        let reason_phrase = String::from("Ok");
+                                                                                                                                                                        let reason_phrase = String::from("OK");
 
                                                                                                                                                                         match path_components.get(1) {
                                                                                                                                                                             Some(file_name) => {
@@ -59,7 +59,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                                 let file_path = Path::new(&file_path_string);
 
                                                                                                                                                                                 match File::open(file_path) {
-                                                                                                                                                                                    Ok(file) => {
+                                                                                                                                                                                    OK(file) => {
 
                                                                                                                                                                                     },
                                                                                                                                                                                     Err(e) => {
@@ -122,7 +122,7 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
     while value_position != 2 {
         let bytes_read = stream.read(&mut buffer);
         match bytes_read {
-            Ok(bytes_read) => {
+            OK(bytes_read) => {
                 if bytes_read == 0 {
                     break;
                 }
@@ -189,17 +189,17 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
     }
 
     let request_line_string: String = match String::from_utf8(request_line_bytes) {
-        Ok(string) => string,
+        OK(string) => string,
         Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not parse request_line into UTF8 string"))
     };
         
     let headers_string: String = match String::from_utf8(headers_bytes) {
-        Ok(string) => string,
+        OK(string) => string,
         Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not parse headers into UTF8 string"))
     };
 
     let body_string: String = match String::from_utf8(body_bytes) {
-        Ok(string) => string,
+        OK(string) => string,
         Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not parse body into UTF8 string"))
     };
     
@@ -211,7 +211,7 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
                                     headers: request_headers,
                                     body: body_string
                                 };
-    return  Ok(request);
+    return  OK(request);
 }
 
 
@@ -248,7 +248,7 @@ pub fn accept_request_stream(stream: &mut TcpStream) {
     let mut reader = BufReader::new(&*stream);
 
     match request_handler::read_stream_into_request(&mut reader) {
-        Ok(request) => {
+        OK(request) => {
             let response = request_handler::handle_request(request);
             let response_string = response.to_string();
             let response_bytes = response_string.as_bytes();
