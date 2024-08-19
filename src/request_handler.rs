@@ -50,31 +50,54 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                         (Some(status_code), Some(reason_phrase), Some(headers), Some(body))
                                                                                                                                                                     },
                                                                                                                                                                     "files" => {
-                                                                                                                                                                        let status_code = 200;
-                                                                                                                                                                        let reason_phrase = String::from("OK");
+                                                                                                                                                                        let mut status_code = 200;
+                                                                                                                                                                        let mut reason_phrase = String::from("OK");
 
-                                                                                                                                                                        match path_components.get(1) {
+                                                                                                                                                                        let file_contents: Option<String> = match path_components.get(1) {
                                                                                                                                                                             Some(file_name) => {
                                                                                                                                                                                 let file_path_string = AppConfig::global().serve_directory.clone() + file_name;
                                                                                                                                                                                 let file_path = Path::new(&file_path_string);
 
-                                                                                                                                                                                match File::open(file_path) {
-                                                                                                                                                                                    Ok(file) => {
-
+                                                                                                                                                                                let mut file_contents_string: Option<String> = match File::open(file_path) {
+                                                                                                                                                                                    Ok(mut file) => {
+                                                                                                                                                                                        let mut file_contents_string = String::new();
+                                                                                                                                                                                        match file.read_to_string(&mut file_contents_string) {
+                                                                                                                                                                                            Ok(_) => Some(file_contents_string),
+                                                                                                                                                                                            Err(_) => {
+                                                                                                                                                                                                status_code = 500;
+                                                                                                                                                                                                reason_phrase = String::from(format!("Error reading contents of {}", file_name));
+                                                                                                                                                                                                None
+                                                                                                                                                                                            } 
+                                                                                                                                                                                        }
                                                                                                                                                                                     },
                                                                                                                                                                                     Err(e) => {
-
+                                                                                                                                                                                        status_code = 500;
+                                                                                                                                                                                        reason_phrase = String::from(format!("Error opening file: {}", file_name));
+                                                                                                                                                                                        None
                                                                                                                                                                                     }
-                                                                                                                                                                                }
+                                                                                                                                                                                };
+
+                                                                                                                                                                                file_contents_string
                                                                                                                                                                             },
                                                                                                                                                                             None => {
-            
+                                                                                                                                                                                None
                                                                                                                                                                             }
-                                                                                                                                                                        }
+                                                                                                                                                                        };
+
+                                                                                                                                                                        let (headers, body): (Option<HashMap<String, String>>, Option<String>) = match file_contents {
+                                                                                                                                                                            Some(file_contents) => {
+                                                                                                                                                                                let headers = HashMap::from([
+                                                                                                                                                                                    ("Content-Type".to_string(), "application/octet-stream".to_string()),
+                                                                                                                                                                                    ("Content-Length".to_string(), file_contents.len().to_string())
+                                                                                                                                                                                ]);
+                                                                                                                                                                                (Some(headers), Some(file_contents))
+                                                                                                                                                                            },
+                                                                                                                                                                            None => {
+                                                                                                                                                                                (None, None)
+                                                                                                                                                                            }
+                                                                                                                                                                        };
                                                                                                                                                                         
-                                                                                                                                                                        (Some(status_code), Some(reason_phrase), None, None)
-
-
+                                                                                                                                                                        (Some(status_code), Some(reason_phrase), headers, body)
                                                                                                                                                                     },    
                                                                                                                                                                     _ => {
                                                                                                                                                                         let status_code = 404;
@@ -101,8 +124,6 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
     };
     return response
 }
-
-
 
 
 

@@ -1,6 +1,7 @@
 use std::{collections::HashMap, net::TcpStream};
 use std::io::Write;
 use std::str::from_utf8;
+use http_server_starter_rust::config::AppConfig;
 use http_server_starter_rust::{request_handler, HttpRequest, HttpResponse, RequestLine};
 use std::io::{Cursor, Read};
 
@@ -229,6 +230,7 @@ fn test_useragent_path_returns_body_2(){
 
 #[test]
 fn test_files_path_returns_file_content() {
+    AppConfig::initialize();
     let request = HttpRequest {
                                     request_line: RequestLine {
                                                         method: "GET".to_string(),
@@ -247,3 +249,4 @@ fn test_files_path_returns_file_content() {
     // assert_eq!(response.headers.get("Content-Length"), Some(&"78".to_string()));
     assert_eq!(response.body, "this is a test file bb. dare to dream and roll the dice, you only get the one.")
 }
+
