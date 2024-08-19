@@ -1,13 +1,7 @@
 use std::{collections::HashMap, fmt::Display};
-
+use lazy_static::lazy_static;
 pub mod request_handler;
-
-pub struct RequestLine {
-    pub method: String,
-    pub target: String,
-    pub version: String
-}
-
+pub mod config;
 
 pub struct HttpRequest {
     pub request_line: RequestLine,
@@ -15,8 +9,11 @@ pub struct HttpRequest {
     pub body: String
 }
 
-
-
+pub struct RequestLine {
+    pub method: String,
+    pub target: String,
+    pub version: String
+}
 
 pub struct HttpResponse {
     pub version: String,
@@ -43,3 +40,4 @@ impl Display for HttpResponse {
         return write!(f, "{}", self.body); 
     }
 }
+

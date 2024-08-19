@@ -1,89 +1,110 @@
 
-use std::{fmt::Display, io::{self, BufRead, BufReader, Read, Write}, net::{TcpListener, TcpStream}, time::Duration};
+use std::{fmt::Display, fs::File, io::{self, BufRead, BufReader, Read, Write}, net::{TcpListener, TcpStream}, path::Path, time::Duration};
+use config::AppConfig;
 use itertools::Itertools;
 
 use super::*;
 
-pub fn accept_request_stream(stream: &mut TcpStream) {
-    println!("accepted new connection ");
-    stream.set_read_timeout(Some(Duration::new(1, 0)));
-
-    let mut reader = BufReader::new(&*stream);
-
-    match request_handler::read_stream_into_request(&mut reader) {
-        Ok(request) => {
-            let response = request_handler::handle_request(request);
-            let response_string = response.to_string();
-            let response_bytes = response_string.as_bytes();
-            let _ = stream.write_all(response_bytes);
-
-        },
-        Err(e) => {
-            let error_response = HttpResponse { 
-                                                    version: String::from("HTTP/1.1"),
-                                                    status_code: 500,
-                                                    reason_phrase: e.to_string(),
-                                                    headers: HashMap::new(),
-                                                    body: String::new()  
-                                                };
-            let response_string = error_response.to_string();
-            let response_bytes = response_string.as_bytes();
-            let _ = stream.write_all(response_bytes);
-        }
-    }
-}
-
-
 pub fn handle_request(request: HttpRequest) -> HttpResponse {
     let path_components: Vec<&str> = request.request_line.target[1..].split("/").collect();
     
-    let response: HttpResponse = match path_components[0] {
-        "" => HttpResponse { 
-                    version: request.request_line.version,
-                    status_code: 200,
-                    reason_phrase: String::from("OK"),
-                    headers: HashMap::new(),
-                    body: String::new()
-                }, 
-        "echo" => HttpResponse { 
-                        version: request.request_line.version,
-                        status_code: 200,
-                        reason_phrase: String::from("OK"),
-                        headers: HashMap::from([
-                                        ("Content-Type".to_string(), "text/plain".to_string()),
-                                        ("Content-Length".to_string(), path_components[1].len().to_string())
-                                    ]),
-                        body: path_components[1].to_string()
-                    }, 
-        "user-agent" => {
-                            let user_agent_value = match request.headers.get("User-Agent") {
-                                    Some(value) => value.to_string(),
-                                    None => String::new()
-                                };
+    
+    let response_params: (Option<u32>, Option<String>, Option<String>, Option<String>) = (None, None, None, None);
 
-                            HttpResponse { 
-                                version: request.request_line.version,
-                                status_code: 200,
-                                reason_phrase: String::from("OK"),
-                                headers: HashMap::from([
-                                                ("Content-Type".to_string(), "text/plain".to_string()),
-                                                ("Content-Length".to_string(), user_agent_value.len().to_string())
-                                            ]),
-                                body: user_agent_value.clone()
-                                
-                            }
-            }, 
-        _ => HttpResponse {
-                    version: request.request_line.version,
-                    status_code: 404,
-                    reason_phrase: String::from("Not Found"),
-                    headers: HashMap::new(),
-                    body: String::new()
-                }
+    let (status_code, reason_phrase, headers, body): (Option<u32>, Option<String>, Option<HashMap<String, String>>, Option<String>) = match path_components[0] {
+                                                                                                                                                                    "" => {
+                                                                                                                                                                        let status_code = 200;
+                                                                                                                                                                        let reason_phrase = String::from("OK");
+                                                                                                                                                                        
+                                                                                                                                                                        (Some(status_code), Some(reason_phrase), None, None)
+                                                                                                                                                                    }, 
+                                                                                                                                                                    "echo" => {
+                                                                                                                                                                        let status_code = 200;
+                                                                                                                                                                        let reason_phrase = String::from("Ok");
+                                                                                                                                                                        
+                                                                                                                                                                        let body = match path_components.get(1) {
+                                                                                                                                                                            Some(value) => value.to_string(),
+                                                                                                                                                                            None => String::new()
+                                                                                                                                                                        };
+
+                                                                                                                                                                        let headers = HashMap::from([
+                                                                                                                                                                            ("Content-Type".to_string(), "text/plain".to_string()),
+                                                                                                                                                                            ("Content-Length".to_string(), body.len().to_string())
+                                                                                                                                                                        ]);
+
+                                                                                                                                                                        (Some(status_code), Some(reason_phrase), Some(headers), Some(body))
+                                                                                                                                                                    }, 
+                                                                                                                                                                    "user-agent" => {
+                                                                                                                                                                        let status_code = 200;
+                                                                                                                                                                        let reason_phrase = String::from("Ok");
+
+                                                                                                                                                                        let body = match request.headers.get("User-Agent") {
+                                                                                                                                                                            Some(value) => value.to_string(),
+                                                                                                                                                                            None => String::new()
+                                                                                                                                                                        };
+                                                                                                                                                                        let headers = HashMap::from([
+                                                                                                                                                                            ("Content-Type".to_string(), "text/plain".to_string()),
+                                                                                                                                                                            ("Content-Length".to_string(), body.len().to_string())
+                                                                                                                                                                        ]);
+
+                                                                                                                                                                        (Some(status_code), Some(reason_phrase), Some(headers), Some(body))
+                                                                                                                                                                    },
+                                                                                                                                                                    "files" => {
+                                                                                                                                                                        let status_code = 200;
+                                                                                                                                                                        let reason_phrase = String::from("Ok");
+
+                                                                                                                                                                        match path_components.get(1) {
+                                                                                                                                                                            Some(file_name) => {
+                                                                                                                                                                                let file_path_string = AppConfig::global().serve_directory.clone() + file_name;
+                                                                                                                                                                                let file_path = Path::new(&file_path_string);
+
+                                                                                                                                                                                match File::open(file_path) {
+                                                                                                                                                                                    Ok(file) => {
+
+                                                                                                                                                                                    },
+                                                                                                                                                                                    Err(e) => {
+
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            },
+                                                                                                                                                                            None => {
+            
+                                                                                                                                                                            }
+                                                                                                                                                                        }
+                                                                                                                                                                        
+                                                                                                                                                                        (Some(status_code), Some(reason_phrase), None, None)
+
+
+                                                                                                                                                                    },    
+                                                                                                                                                                    _ => {
+                                                                                                                                                                        let status_code = 404;
+                                                                                                                                                                        let reason_phrase = String::from("Not Found");
+
+                                                                                                                                                                        (Some(status_code), Some(reason_phrase), None, None)
+                                                                                                                                                                    }
+                                                                                                                                                                };
+    let response: HttpResponse = match status_code {
+        Some(status_code) =>  HttpResponse {
+            version: request.request_line.version,
+            status_code: status_code,
+            reason_phrase: reason_phrase.unwrap_or(String::new()),
+            headers: headers.unwrap_or(HashMap::new()),
+            body: body.unwrap_or(String::new())
+        },
+        None =>  HttpResponse {
+            version: request.request_line.version,
+            status_code: status_code.unwrap_or(500),
+            reason_phrase: reason_phrase.unwrap_or(String::from("Unable to process request")),
+            headers: HashMap::new(),
+            body: String::new()
+        }
     };
-
     return response
 }
+
+
+
+
 
 
 pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<HttpRequest, io::Error> {
@@ -193,6 +214,8 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
     return  Ok(request);
 }
 
+
+
 pub fn deserialize_requestline(request_line_string: String) -> RequestLine {
     let request_line_components: Vec<String> = request_line_string.split(" ").map(|s| s.to_string()).collect();
 
@@ -215,4 +238,34 @@ pub fn deserialize_headers(request_headers_string: String) -> HashMap<String, St
     }
 
     return header_map;
+}
+
+
+pub fn accept_request_stream(stream: &mut TcpStream) {
+    println!("accepted new connection ");
+    stream.set_read_timeout(Some(Duration::new(1, 0)));
+
+    let mut reader = BufReader::new(&*stream);
+
+    match request_handler::read_stream_into_request(&mut reader) {
+        Ok(request) => {
+            let response = request_handler::handle_request(request);
+            let response_string = response.to_string();
+            let response_bytes = response_string.as_bytes();
+            let _ = stream.write_all(response_bytes);
+
+        },
+        Err(e) => {
+            let error_response = HttpResponse { 
+                                                    version: String::from("HTTP/1.1"),
+                                                    status_code: 500,
+                                                    reason_phrase: e.to_string(),
+                                                    headers: HashMap::new(),
+                                                    body: String::new()  
+                                                };
+            let response_string = error_response.to_string();
+            let response_bytes = response_string.as_bytes();
+            let _ = stream.write_all(response_bytes);
+        }
+    }
 }

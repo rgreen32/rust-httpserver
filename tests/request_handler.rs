@@ -225,3 +225,25 @@ fn test_useragent_path_returns_body_2(){
     assert_eq!(response.headers.get("Content-Length"), Some(&"6".to_string()));
     assert_eq!(response.body, "foobar")
 }
+
+
+#[test]
+fn test_files_path_returns_file_content() {
+    let request = HttpRequest {
+                                    request_line: RequestLine {
+                                                        method: "GET".to_string(),
+                                                        target: "/files/foo".to_string(),
+                                                        version: "HTTP/1.1".to_string(),
+                                                    },
+                                    headers: HashMap::from([("User-Agent".to_string(), "foobar".to_string())]),
+                                    body: String::new()
+                                };
+
+    let response = request_handler::handle_request(request);
+    
+    assert_eq!(response.status_code, 200);
+    assert!(response.headers.contains_key("Content-Type"));
+    assert!(response.headers.contains_key("Content-Length"));
+    // assert_eq!(response.headers.get("Content-Length"), Some(&"78".to_string()));
+    assert_eq!(response.body, "this is a test file bb. dare to dream and roll the dice, you only get the one.")
+}
