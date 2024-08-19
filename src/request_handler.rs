@@ -59,7 +59,7 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                                 let file_path = Path::new(&file_path_string);
 
                                                                                                                                                                                 match File::open(file_path) {
-                                                                                                                                                                                    OK(file) => {
+                                                                                                                                                                                    Ok(file) => {
 
                                                                                                                                                                                     },
                                                                                                                                                                                     Err(e) => {
@@ -122,7 +122,7 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
     while value_position != 2 {
         let bytes_read = stream.read(&mut buffer);
         match bytes_read {
-            OK(bytes_read) => {
+            Ok(bytes_read) => {
                 if bytes_read == 0 {
                     break;
                 }
@@ -189,17 +189,17 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
     }
 
     let request_line_string: String = match String::from_utf8(request_line_bytes) {
-        OK(string) => string,
+        Ok(string) => string,
         Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not parse request_line into UTF8 string"))
     };
         
     let headers_string: String = match String::from_utf8(headers_bytes) {
-        OK(string) => string,
+        Ok(string) => string,
         Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not parse headers into UTF8 string"))
     };
 
     let body_string: String = match String::from_utf8(body_bytes) {
-        OK(string) => string,
+        Ok(string) => string,
         Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not parse body into UTF8 string"))
     };
     
@@ -211,7 +211,7 @@ pub fn read_stream_into_request<Stream: BufRead>(stream: &mut Stream) -> Result<
                                     headers: request_headers,
                                     body: body_string
                                 };
-    return  OK(request);
+    return  Ok(request);
 }
 
 
@@ -248,7 +248,7 @@ pub fn accept_request_stream(stream: &mut TcpStream) {
     let mut reader = BufReader::new(&*stream);
 
     match request_handler::read_stream_into_request(&mut reader) {
-        OK(request) => {
+        Ok(request) => {
             let response = request_handler::handle_request(request);
             let response_string = response.to_string();
             let response_bytes = response_string.as_bytes();
