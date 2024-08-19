@@ -71,8 +71,17 @@ pub fn handle_request(request: HttpRequest) -> HttpResponse {
                                                                                                                                                                                         }
                                                                                                                                                                                     },
                                                                                                                                                                                     Err(e) => {
-                                                                                                                                                                                        status_code = 500;
-                                                                                                                                                                                        reason_phrase = String::from(format!("Error opening file: {}", file_name));
+                                                                                                                                                                                        match e.kind() {
+                                                                                                                                                                                            io::ErrorKind::NotFound => {
+                                                                                                                                                                                                status_code = 404;
+                                                                                                                                                                                                reason_phrase = String::from("Not Found");
+
+                                                                                                                                                                                            },
+                                                                                                                                                                                            _ => {
+                                                                                                                                                                                                status_code = 500;
+                                                                                                                                                                                                reason_phrase = String::from(format!("Error opening file: {}", file_name));
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
                                                                                                                                                                                         None
                                                                                                                                                                                     }
                                                                                                                                                                                 };
