@@ -1,7 +1,6 @@
-use std::{env, net::TcpListener, time::Duration};
+use std::{net::TcpListener, time::Duration};
 use http_server_starter_rust::{request_handler};
 use std::thread;
-use once_cell::sync::OnceCell;
 use http_server_starter_rust::{config::{AppConfig, APP_CONFIG_INSTANCE}};
 
 
@@ -26,5 +25,5 @@ fn main() {
             }
         }
     }
-    
+
 }
