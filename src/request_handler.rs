@@ -5,6 +5,9 @@ use config::AppConfig;
 use super::*;
 
 pub fn handle_request(request: HttpRequest) -> HttpResponse {
+    let path_components: Vec<&str> = request.request_line.target[1..]
+                                                         .split("/")
+                                                         .collect();
     
     let path_components: Vec<&str> = request.request_line.target[1..]
                                                          .split("/")
